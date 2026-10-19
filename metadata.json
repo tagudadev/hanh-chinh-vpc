@@ -1,0 +1,8 @@
+{
+  "name": "Hành chính VPC - Accounting Workspace",
+  "description": "Internal web application for VPC accounting and administrative workflows including late arrival tracking, employee directory, and reports.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
