@@ -24,7 +24,9 @@ import {
   getVietnamToday, 
   subtractDays, 
   subtractMonths, 
-  getQuarterDateRange 
+  getQuarterDateRange,
+  formatPriorNoticeText,
+  formatNoticeMethodText
 } from '../utils/helpers';
 
 interface ReportsTabProps {
@@ -62,9 +64,10 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
   const [selectedQuarter, setSelectedQuarter] = useState<number>(currentQuarter);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
-  // Filters for Department & Employee
+  // Filters for Department, Employee, and Prior Notice Status
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('all');
+  const [selectedPriorNotice, setSelectedPriorNotice] = useState<string>('all'); // 'all' | 'reported' | 'unreported' | 'unverified'
 
   // View modes
   const [reportView, setReportView] = useState<'by_employee' | 'by_department' | 'by_date' | 'detailed_raw'>('by_employee');
@@ -124,7 +127,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
     return `${formatDateVN(startDate)} - ${formatDateVN(endDate)}`;
   }, [timePreset, startDate, endDate, selectedQuarter, selectedYear]);
 
-  // Lọc bản ghi dựa trên khoảng thời gian, phòng ban và nhân viên
+  // Lọc bản ghi dựa trên khoảng thời gian, phòng ban, nhân viên và trạng thái báo trước
   const filteredRecords = useMemo(() => {
     return records.filter(r => {
       // 1. Khoảng thời gian chính xác
@@ -142,9 +145,15 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         return false;
       }
 
+      // 4. Trạng thái báo trước với Hành chính (các bản ghi cũ chưa có thông tin coi là unverified)
+      if (selectedPriorNotice !== 'all') {
+        const noticeStatus = r.priorNoticeStatus || 'unverified';
+        if (noticeStatus !== selectedPriorNotice) return false;
+      }
+
       return true;
     });
-  }, [records, employees, startDate, endDate, selectedDept, selectedEmployeeId]);
+  }, [records, employees, startDate, endDate, selectedDept, selectedEmployeeId, selectedPriorNotice]);
 
   // Kiểm tra xem có đang lọc theo 1 nhân viên cụ thể hay không
   const isSingleEmployeeSelected = selectedEmployeeId !== 'all';
@@ -399,6 +408,9 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         'Giờ đến',
         'Trạng thái',
         'Thời gian trễ từng ca (phút)',
+        'Đã báo trước?',
+        'Thời điểm báo',
+        'Hình thức báo',
         'Ghi chú',
         'Người ghi nhận'
       ];
@@ -413,6 +425,9 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
           r.arrivalTime,
           r.isLate ? 'Đi trễ' : 'Đúng giờ',
           r.isLate ? Math.round(r.lateSeconds / 60) : 0,
+          formatPriorNoticeText(r.priorNoticeStatus),
+          r.noticeTime || '',
+          formatNoticeMethodText(r.noticeMethod),
           r.notes || '',
           r.createdBy
         ];
@@ -439,11 +454,11 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
           )
         ).join('\n');
     } else {
-      tsv = ['Mã NV\tHọ Tên\tNgày\tGiờ Đến\tTrạng Thái\tPhút Trễ Riêng\tGhi Chú']
+      tsv = ['Mã NV\tHọ Tên\tNgày\tGiờ Đến\tTrạng Thái\tPhút Trễ Riêng\tBáo Trước\tThời Điểm Báo\tHình Thức Báo\tGhi Chú']
         .concat(
           filteredRecords.map(r => {
             const emp = employees.find(e => e.id === r.employeeId);
-            return `${r.employeeCode}\t${emp?.fullName}\t${r.date}\t${r.arrivalTime}\t${r.isLate ? 'Trễ' : 'Đúng giờ'}\t${r.isLate ? Math.round(r.lateSeconds/60) : 0}\t${r.notes || ''}`;
+            return `${r.employeeCode}\t${emp?.fullName}\t${r.date}\t${r.arrivalTime}\t${r.isLate ? 'Trễ' : 'Đúng giờ'}\t${r.isLate ? Math.round(r.lateSeconds/60) : 0}\t${formatPriorNoticeText(r.priorNoticeStatus)}\t${r.noticeTime || ''}\t${formatNoticeMethodText(r.noticeMethod)}\t${r.notes || ''}`;
           })
         ).join('\n');
     }
@@ -694,8 +709,8 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
 
         </div>
 
-        {/* ROW 3: Department and Employee Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+        {/* ROW 3: Department, Employee and Prior Notice Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100">
           
           {/* Department Filter */}
           <div>
@@ -720,10 +735,25 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
               onChange={(e) => setSelectedEmployeeId(e.target.value)}
               className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700 cursor-pointer"
             >
-              <option value="all">Tất cả nhân sự</option>
+              <option value="all">Tất cả nhân sự ({employees.length})</option>
               {employees.map(e => (
                 <option key={e.id} value={e.id}>{e.code} - {e.fullName} ({e.department})</option>
               ))}
+            </select>
+          </div>
+
+          {/* Prior Notice Filter */}
+          <div>
+            <label className="block text-[11px] font-bold text-slate-600 mb-1">Báo trước với HC:</label>
+            <select
+              value={selectedPriorNotice}
+              onChange={(e) => setSelectedPriorNotice(e.target.value)}
+              className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700 cursor-pointer"
+            >
+              <option value="all">Tất cả trạng thái báo trước</option>
+              <option value="reported">📢 Đã báo trước</option>
+              <option value="unreported">🚫 Không báo trước</option>
+              <option value="unverified">❓ Chưa xác minh</option>
             </select>
           </div>
 
@@ -1019,6 +1049,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                   <th className="py-2.5 px-3">Giờ đến</th>
                   <th className="py-2.5 px-3">Trạng thái</th>
                   <th className="py-2.5 px-3">Thời gian trễ từng ca</th>
+                  <th className="py-2.5 px-3">Báo trước với HC</th>
                   <th className="py-2.5 px-3">Ghi chú</th>
                   <th className="py-2.5 px-3">Người ghi nhận</th>
                 </tr>
@@ -1026,7 +1057,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {filteredRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-8 text-center text-slate-400">
+                    <td colSpan={11} className="py-8 text-center text-slate-400">
                       Không có bản ghi nào trong khoảng thời gian đã chọn ({formatDateVN(startDate)} - {formatDateVN(endDate)}).
                     </td>
                   </tr>
@@ -1054,6 +1085,30 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                         </td>
                         <td className="py-2.5 px-3 font-bold text-amber-800">
                           {r.isLate ? `+${Math.round(r.lateSeconds / 60)} phút` : '-'}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          {r.priorNoticeStatus === 'reported' ? (
+                            <div className="space-y-0.5">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                                Đã báo trước
+                              </span>
+                              {(r.noticeMethod || r.noticeTime) && (
+                                <div className="text-[10px] text-slate-500">
+                                  {r.noticeMethod && <span>{formatNoticeMethodText(r.noticeMethod)}</span>}
+                                  {r.noticeMethod && r.noticeTime && <span> • </span>}
+                                  {r.noticeTime && <span>{r.noticeTime}</span>}
+                                </div>
+                              )}
+                            </div>
+                          ) : r.priorNoticeStatus === 'unreported' ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">
+                              Không báo trước
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                              Chưa xác minh
+                            </span>
+                          )}
                         </td>
                         <td className="py-2.5 px-3 max-w-xs truncate text-slate-600">{r.notes || '-'}</td>
                         <td className="py-2.5 px-3 text-slate-400 text-[11px]">{r.createdBy}</td>
@@ -1116,6 +1171,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                     <th className="py-2 px-3">Giờ đến</th>
                     <th className="py-2 px-3">Trạng thái</th>
                     <th className="py-2 px-3">Thời gian trễ</th>
+                    <th className="py-2 px-3">Báo trước với HC</th>
                     <th className="py-2 px-3">Ghi chú</th>
                   </tr>
                 </thead>
@@ -1137,6 +1193,30 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                       </td>
                       <td className="py-2 px-3 font-bold">
                         {r.isLate ? `+${Math.round(r.lateSeconds / 60)} phút` : '-'}
+                      </td>
+                      <td className="py-2 px-3 whitespace-nowrap">
+                        {r.priorNoticeStatus === 'reported' ? (
+                          <div className="space-y-0.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                              Đã báo trước
+                            </span>
+                            {(r.noticeMethod || r.noticeTime) && (
+                              <div className="text-[10px] text-slate-500">
+                                {r.noticeMethod && <span>{formatNoticeMethodText(r.noticeMethod)}</span>}
+                                {r.noticeMethod && r.noticeTime && <span> • </span>}
+                                {r.noticeTime && <span>{r.noticeTime}</span>}
+                              </div>
+                            )}
+                          </div>
+                        ) : r.priorNoticeStatus === 'unreported' ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">
+                            Không báo trước
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                            Chưa xác minh
+                          </span>
+                        )}
                       </td>
                       <td className="py-2 px-3 text-slate-500">{r.notes || '-'}</td>
                     </tr>

@@ -9,10 +9,12 @@ import {
   PlusCircle, 
   FileEdit, 
   CheckCircle2, 
-  AlertTriangle 
+  AlertTriangle,
+  Cake,
+  FileText
 } from 'lucide-react';
 import { Employee, ArrivalRecord } from '../../types';
-import { formatDateVN } from '../../utils/helpers';
+import { formatDateVN, formatNoticeMethodText } from '../../utils/helpers';
 
 interface EmployeeDetailDrawerProps {
   isOpen: boolean;
@@ -115,6 +117,24 @@ export const EmployeeDetailDrawer: React.FC<EmployeeDetailDrawerProps> = ({
                   <span>Vào làm: {formatDateVN(employee.startDate)}</span>
                 </div>
               )}
+              <div className="flex items-center space-x-2 text-slate-600">
+                <Cake className="w-3.5 h-3.5 text-slate-400" />
+                <span>Ngày sinh: </span>
+                <span className="font-semibold text-slate-800">
+                  {employee.dateOfBirth ? formatDateVN(employee.dateOfBirth) : '—'}
+                </span>
+              </div>
+              {employee.notes && (
+                <div className="pt-2 border-t border-slate-200/60 mt-1">
+                  <div className="flex items-start space-x-2 text-slate-600">
+                    <FileText className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-medium text-slate-500 block text-[11px]">Ghi chú:</span>
+                      <p className="text-slate-800 whitespace-pre-wrap leading-relaxed mt-0.5">{employee.notes}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -161,6 +181,7 @@ export const EmployeeDetailDrawer: React.FC<EmployeeDetailDrawerProps> = ({
                       <th className="py-2 px-3">Giờ đến</th>
                       <th className="py-2 px-3">Trạng thái</th>
                       <th className="py-2 px-3">Thời gian trễ</th>
+                      <th className="py-2 px-3">Báo trước với HC</th>
                       <th className="py-2 px-3">Ghi chú</th>
                     </tr>
                   </thead>
@@ -189,6 +210,30 @@ export const EmployeeDetailDrawer: React.FC<EmployeeDetailDrawerProps> = ({
                             <span className="text-amber-700">+{Math.round(rec.lateSeconds / 60)} phút ({rec.lateSeconds}s)</span>
                           ) : (
                             <span className="text-emerald-700 font-normal">-</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          {rec.priorNoticeStatus === 'reported' ? (
+                            <div className="space-y-0.5">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                                Đã báo trước
+                              </span>
+                              {(rec.noticeMethod || rec.noticeTime) && (
+                                <div className="text-[10px] text-slate-500">
+                                  {rec.noticeMethod && <span>{formatNoticeMethodText(rec.noticeMethod)}</span>}
+                                  {rec.noticeMethod && rec.noticeTime && <span> • </span>}
+                                  {rec.noticeTime && <span>{rec.noticeTime}</span>}
+                                </div>
+                              )}
+                            </div>
+                          ) : rec.priorNoticeStatus === 'unreported' ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                              Không báo trước
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                              Chưa xác minh
+                            </span>
                           )}
                         </td>
                         <td className="py-2.5 px-3 max-w-xs text-slate-600">

@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { PriorNoticeStatus, NoticeMethod } from '../types';
 
 export const DEFAULT_LATE_THRESHOLD = '08:30';
 
@@ -163,6 +164,27 @@ export function formatDateVN(dateStr: string): string {
   return dateStr;
 }
 
+export function formatDateVNDetailed(dateStr: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const weekdays = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    const dayName = weekdays[d.getDay()];
+    return `${dayName}, ngày ${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
+
+export function formatLateDuration(seconds: number): string {
+  if (seconds <= 0) return '0 phút';
+  const minutes = Math.floor(seconds / 60);
+  const remSec = seconds % 60;
+  if (minutes === 0) return `${remSec} giây`;
+  if (remSec === 0) return `${minutes} phút`;
+  return `${minutes} phút ${remSec} giây`;
+}
+
 /**
  * Xuất dữ liệu ra file Excel (.xlsx) bằng SheetJS
  */
@@ -308,6 +330,24 @@ export function getVietnamToday(): string {
 }
 
 /**
+ * Lấy giờ và phút hiện tại theo giờ địa phương Việt Nam (Asia/Ho_Chi_Minh - UTC+7) định dạng HH:mm
+ * Ví dụ: "08:33"
+ */
+export function getVietnamCurrentTime(): string {
+  const d = new Date();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(d);
+
+  const hour = parts.find(p => p.type === 'hour')?.value.padStart(2, '0') || '08';
+  const minute = parts.find(p => p.type === 'minute')?.value.padStart(2, '0') || '00';
+  return `${hour}:${minute}`;
+}
+
+/**
  * Lùi số ngày từ một chuỗi ngày YYYY-MM-DD
  */
 export function subtractDays(dateStr: string, days: number): string {
@@ -351,6 +391,30 @@ export function getQuarterDateRange(quarter: number, year: number): { startDate:
     case 4:
     default:
       return { startDate: `${year}-10-01`, endDate: `${year}-12-31` };
+  }
+}
+
+/**
+ * Hiển thị nhãn trạng thái Báo trước với Hành chính
+ * Các bản ghi cũ chưa có thông tin phải hiển thị "Chưa xác minh", không tự suy đoán.
+ */
+export function formatPriorNoticeText(status?: PriorNoticeStatus): string {
+  if (status === 'reported') return 'Đã báo trước';
+  if (status === 'unreported') return 'Không báo trước';
+  return 'Chưa xác minh';
+}
+
+/**
+ * Hiển thị nhãn Hình thức báo trước
+ */
+export function formatNoticeMethodText(method?: NoticeMethod): string {
+  switch (method) {
+    case 'zalo': return 'Zalo';
+    case 'phone': return 'Điện thoại';
+    case 'direct': return 'Trực tiếp';
+    case 'email': return 'Email';
+    case 'other': return 'Khác';
+    default: return '';
   }
 }
 

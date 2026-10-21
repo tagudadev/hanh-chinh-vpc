@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, totalLateCount, onSel
     },
     {
       id: 'employees' as ActiveTab,
-      label: 'Danh bạ nhân viên',
+      label: 'Quản lý nhân sự',
       icon: Users,
     },
     {

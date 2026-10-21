@@ -30,7 +30,23 @@ export const App: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_PREFIX}employees`);
-      return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+      if (saved) {
+        const parsed: Employee[] = JSON.parse(saved);
+        const existingCodes = new Set(parsed.map(e => e.code.toUpperCase()));
+        const existingIds = new Set(parsed.map(e => e.id));
+        const newEmployees = INITIAL_EMPLOYEES.filter(e => !existingCodes.has(e.code.toUpperCase()) && !existingIds.has(e.id));
+        if (newEmployees.length > 0) {
+          const merged = [...parsed, ...newEmployees];
+          try {
+            localStorage.setItem(`${STORAGE_PREFIX}employees`, JSON.stringify(merged));
+          } catch {
+            // ignore
+          }
+          return merged;
+        }
+        return parsed;
+      }
+      return INITIAL_EMPLOYEES;
     } catch {
       return INITIAL_EMPLOYEES;
     }
@@ -55,6 +71,37 @@ export const App: React.FC = () => {
       return DEFAULT_SETTINGS;
     }
   });
+
+  // 4. Theme mode state (light/dark - defaults to light)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('vpc_theme');
+      if (saved === 'dark' || saved === 'light') {
+        return saved;
+      }
+    } catch {
+      // ignore
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('vpc_theme', theme);
+    } catch (e) {
+      console.error('Failed to save theme', e);
+    }
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
 
@@ -255,6 +302,8 @@ export const App: React.FC = () => {
       <Header
         activeTab={activeTab}
         lateCountToday={totalLateCount}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onOpenRecordModal={() => {
           setEditingRecord(null);
           setInitialEmployeeId(undefined);
@@ -347,6 +396,8 @@ export const App: React.FC = () => {
             onResetAllData={handleResetData}
             onExportBackup={handleExportBackup}
             onImportBackup={handleImportBackup}
+            theme={theme}
+            onSetTheme={(t) => setTheme(t)}
           />
         )}
 

@@ -13,7 +13,8 @@ import {
   Trash2, 
   ChevronRight,
   UserCheck,
-  X
+  X,
+  Cake
 } from 'lucide-react';
 import { Employee, ArrivalRecord, Department } from '../types';
 import { formatDateVN } from '../utils/helpers';
@@ -102,13 +103,13 @@ export const EmployeeDirectoryTab: React.FC<EmployeeDirectoryTabProps> = ({
       <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center space-x-2">
-            <span>Danh bạ Nhân sự Công ty VPC</span>
+            <span>Quản lý nhân sự</span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold">
               {filteredEmployees.length} nhân sự
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Quản lý mã nhân viên, họ tên tiếng Việt, tên tiếng Anh, phòng ban và theo dõi tình hình đi trễ
+            Quản lý hồ sơ nhân viên, thông tin cá nhân, phòng ban và trạng thái làm việc.
           </p>
         </div>
 
@@ -196,11 +197,9 @@ export const EmployeeDirectoryTab: React.FC<EmployeeDirectoryTabProps> = ({
       {/* Grid View */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredEmployees.map(emp => {
-            const stats = employeeStats[emp.id] || { totalLate: 0, totalMinutes: 0, totalRecords: 0 };
-            return (
-              <div
-                key={emp.id}
+          {filteredEmployees.map(emp => (
+            <div
+              key={emp.id}
                 className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
@@ -243,19 +242,20 @@ export const EmployeeDirectoryTab: React.FC<EmployeeDirectoryTabProps> = ({
                         <span className="truncate">{emp.email}</span>
                       </div>
                     )}
-                  </div>
 
-                  {/* Attendance Performance Card */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Số lượt đi trễ</span>
-                      <span className={`font-bold text-sm ${stats.totalLate > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                        {stats.totalLate} ca
+                    {emp.phone && (
+                      <div className="flex items-center space-x-2 text-slate-500">
+                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{emp.phone}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center space-x-2 text-slate-500">
+                      <Cake className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>Ngày sinh: </span>
+                      <span className="font-medium text-slate-700">
+                        {emp.dateOfBirth ? formatDateVN(emp.dateOfBirth) : '—'}
                       </span>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Tổng phút trễ</span>
-                      <span className="font-bold text-sm text-slate-800">{stats.totalMinutes} phút</span>
                     </div>
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export const EmployeeDirectoryTab: React.FC<EmployeeDirectoryTabProps> = ({
                     onClick={() => onSelectEmployeeDetail(emp)}
                     className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
                   >
-                    <span>Lịch sử chấm công</span>
+                    <span>Xem hồ sơ</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
 
@@ -293,8 +293,7 @@ export const EmployeeDirectoryTab: React.FC<EmployeeDirectoryTabProps> = ({
                 </div>
 
               </div>
-            );
-          })}
+            ))}
         </div>
       ) : (
         /* Table View */
@@ -307,6 +306,7 @@ export const EmployeeDirectoryTab: React.FC<EmployeeDirectoryTabProps> = ({
                   <th className="py-3 px-4">Họ và tên tiếng Việt</th>
                   <th className="py-3 px-4">Họ tên tiếng Anh</th>
                   <th className="py-3 px-4">Phòng ban & Vị trí</th>
+                  <th className="py-3 px-4">Ngày sinh</th>
                   <th className="py-3 px-4">Trạng thái</th>
                   <th className="py-3 px-4 text-center">Số lượt đi trễ</th>
                   <th className="py-3 px-4 text-center">Tổng phút trễ</th>
@@ -331,6 +331,9 @@ export const EmployeeDirectoryTab: React.FC<EmployeeDirectoryTabProps> = ({
                       <td className="py-3 px-4">
                         <div className="font-semibold text-slate-800">{emp.position}</div>
                         <div className="text-[11px] text-slate-500">{emp.department}</div>
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap text-slate-600 font-medium">
+                        {emp.dateOfBirth ? formatDateVN(emp.dateOfBirth) : '—'}
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${

@@ -120,7 +120,7 @@ export async function parseExcelFile(
       const upperCode = rawCode.toUpperCase();
       matchedEmployee = employeeMap.get(upperCode);
       if (!matchedEmployee) {
-        errors.push(`Mã nhân viên "${rawCode}" không tồn tại trong danh bạ VPC.`);
+        errors.push(`Mã nhân viên "${rawCode}" không tồn tại trong hệ thống nhân sự VPC.`);
       }
     }
 

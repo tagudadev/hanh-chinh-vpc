@@ -7,13 +7,17 @@ import {
   FileSpreadsheet, 
   RotateCcw,
   AlertTriangle,
-  FileDown
+  FileDown,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 
 interface HeaderProps {
   activeTab: ActiveTab;
   lateCountToday: number;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
   onOpenRecordModal: () => void;
   onOpenExcelModal: () => void;
   onOpenEmployeeModal: () => void;
@@ -23,6 +27,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   lateCountToday,
+  theme,
+  onToggleTheme,
   onOpenRecordModal,
   onOpenExcelModal,
   onOpenEmployeeModal,
@@ -101,6 +107,21 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <UserPlus className="w-4 h-4" />
               <span>Thêm nhân viên</span>
+            </button>
+
+            {/* Dark / Light Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+              title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
+              aria-label={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400 hover:text-amber-300" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-600 hover:text-slate-900" />
+              )}
             </button>
 
             {/* Reset Data Button */}

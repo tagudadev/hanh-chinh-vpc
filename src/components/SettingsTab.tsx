@@ -11,7 +11,9 @@ import {
   Lock, 
   Unlock, 
   Info, 
-  Building 
+  Building,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { WorkspaceSettings } from '../types';
 import { isValidHHmm } from '../utils/helpers';
@@ -22,6 +24,8 @@ interface SettingsTabProps {
   onResetAllData: () => void;
   onExportBackup: () => void;
   onImportBackup: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  theme?: 'light' | 'dark';
+  onSetTheme?: (theme: 'light' | 'dark') => void;
 }
 
 export const SettingsTab: React.FC<SettingsTabProps> = ({
@@ -30,6 +34,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   onResetAllData,
   onExportBackup,
   onImportBackup,
+  theme,
+  onSetTheme,
 }) => {
   const [formData, setFormData] = useState<WorkspaceSettings>(settings);
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
@@ -229,6 +235,74 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         </div>
 
       </form>
+
+      {/* Theme Appearance Mode */}
+      {theme && onSetTheme && (
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                {theme === 'dark' ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
+                <span>Giao diện hiển thị (Chế độ Sáng / Tối)</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Tùy chỉnh chế độ hiển thị phù hợp với điều kiện ánh sáng và sở thích làm việc của Hành chính
+              </p>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+              Hiện tại: {theme === 'dark' ? 'Chế độ Tối' : 'Chế độ Sáng'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => onSetTheme('light')}
+              className={`flex items-start p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                theme === 'light'
+                  ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20'
+                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-600 mr-3 shrink-0">
+                <Sun className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-xs sm:text-sm text-slate-900 flex items-center space-x-1.5">
+                  <span>Chế độ Sáng (Light Mode)</span>
+                  {theme === 'light' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-semibold">Đang dùng</span>}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Nền sáng rõ ràng, độ tương phản sắc nét, phù hợp làm việc ban ngày hoặc môi trường văn phòng đủ sáng
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onSetTheme('dark')}
+              className={`flex items-start p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                theme === 'dark'
+                  ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20'
+                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 mr-3 shrink-0">
+                <Moon className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-xs sm:text-sm text-slate-900 flex items-center space-x-1.5">
+                  <span>Chế độ Tối (Dark Mode)</span>
+                  {theme === 'dark' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-semibold">Đang dùng</span>}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Nền tối dịu mắt, giảm chói, tiết kiệm pin và dễ quan sát trong điều kiện phòng tối hoặc ca đêm
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Backup and Data Management */}
       <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">

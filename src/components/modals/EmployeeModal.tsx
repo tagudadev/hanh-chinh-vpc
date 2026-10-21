@@ -35,6 +35,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [notes, setNotes] = useState('');
   const [codeError, setCodeError] = useState('');
 
   useEffect(() => {
@@ -48,6 +50,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       setEmail(editingEmployee.email || '');
       setPhone(editingEmployee.phone || '');
       setStartDate(editingEmployee.startDate || new Date().toISOString().slice(0, 10));
+      setDateOfBirth(editingEmployee.dateOfBirth || '');
+      setNotes(editingEmployee.notes || '');
       setCodeError('');
     } else {
       const nextNum = existingCodes.length + 101;
@@ -60,6 +64,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       setEmail('');
       setPhone('');
       setStartDate(new Date().toISOString().slice(0, 10));
+      setDateOfBirth('');
+      setNotes('');
       setCodeError('');
     }
   }, [editingEmployee, existingCodes, isOpen]);
@@ -72,7 +78,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
     // Check code duplication
     if (!editingEmployee && existingCodes.includes(upperCode)) {
-      setCodeError('Mã nhân viên này đã tồn tại trong danh bạ VPC.');
+      setCodeError('Mã nhân viên này đã tồn tại trong hệ thống nhân sự VPC.');
       return;
     }
 
@@ -86,6 +92,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       startDate,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
+      dateOfBirth: dateOfBirth.trim() || undefined,
+      notes: notes.trim() || undefined,
     }, editingEmployee?.id);
 
     onClose();
@@ -105,7 +113,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
               <h3 className="font-bold text-slate-900 text-base">
                 {editingEmployee ? 'Chỉnh Sửa Hồ Sơ Nhân Viên' : 'Thêm Nhân Viên Mới'}
               </h3>
-              <p className="text-xs text-slate-500">Quản lý danh bạ nhân sự Công ty Cổ phần VPC</p>
+              <p className="text-xs text-slate-500">Hệ thống Quản lý nhân sự Công ty Cổ phần VPC</p>
             </div>
           </div>
           <button
@@ -240,6 +248,39 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                 className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg"
               />
             </div>
+          </div>
+
+          {/* Ngày sinh (Không bắt buộc) */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-slate-600">
+                Ngày sinh
+              </label>
+              <span className="text-[11px] text-slate-400">Không bắt buộc</span>
+            </div>
+            <input
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700"
+            />
+          </div>
+
+          {/* Ghi chú tự do (Không bắt buộc) */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-slate-600">
+                Ghi chú
+              </label>
+              <span className="text-[11px] text-slate-400">Không bắt buộc</span>
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Nhập ghi chú tự do về nhân sự (VD: đặc điểm, chuyên môn, thông tin nội bộ...)"
+              className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg resize-none text-slate-700 placeholder:text-slate-400"
+            />
           </div>
 
           {/* Footer */}
